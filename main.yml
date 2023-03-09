@@ -1,72 +1,80 @@
 ---
-  # Main installation file
-  #
-  - name: Install django python package
-    ansible.builtin.pip:
-      name: django
+  - name: "Playing with Ansible and Git"
+    hosts: localhost
+    connection: local 
+    tasks:
 
-  - name: Install Gunicorn python package 
-    ansible.builtin.pip:
-      name: gunicorn
+    - name: Install django python package
+      ansible.builtin.pip:
+        name: django
 
+    - name: Install Gunicorn python package 
+      ansible.builtin.pip:
+        name: gunicorn
 
-  - name: This command will change the working directory to /home/$USER/
-    ansible.builtin.shell:
-      cmd: mkdir web
-      chdir: /home/$USER
+    # You can also use the 'cmd' parameter instead of free form format.
+    - name: This command will change the working directory to /home/$USER/
+      ansible.builtin.shell:
+        cmd: mkdir web
+        chdir: /home/$USER
 
-  - name: Change the working directory to /home/$USER/web before installing django app
-    ansible.builtin.shell: python3 -m django startproject app
-    args:
-      chdir: /home/$USER/web
+    - name: Change the working directory to /home/$USER/web before installing django app
+      ansible.builtin.shell: python3 -m django startproject app
+      args:
+        chdir: /home/$USER/web
 
-  - name: This command will create gunicorn config directory
-    ansible.builtin.shell:
-      cmd: mkdir -pv config/gunicorn
-      chdir: /home/$USER/web/app
+    - name: This command will create gunicorn config directory
+      ansible.builtin.shell:
+        cmd: mkdir -pv config/gunicorn
+        chdir: /home/$USER/web/app
 
-  - name: place test file
-    copy:
-      src: "dev.py"
-      dest: "/home/$USER/web/app/config/gunicorn"
-      mode: 0755
+    - name: place test file
+      copy:
+        src: "dev.py"
+        dest: "/home/$USER/web/app/config/gunicorn"
+        mode: 0755
 
-  - name: place server.txt in config directoruy
-    copy:
-      src: "server.txt"
-      dest: "/home/$USER/web/app/config"
-      mode: 0755
+    - name: place server.txt in config directoruy
+      copy:
+        src: "server.txt"
+        dest: "/home/$USER/web/app/config"
+        mode: 0755
 
-  - name: Add username to server $USER
-    ansible.builtin.shell:
-      cmd: sudo sed -i "s/USER/$USER/g" $HOME/web/app/config/server.txt
+    - name: Add username to server $USER
+      ansible.builtin.shell:
+        cmd: sudo sed -i "s/USER/$USER/g" $HOME/web/app/config/server.txt
+  
+     
+    - name: Nginx configuration
+      ansible.builtin.shell:
+        cmd: sudo --preserve-env=USER sed -i '$e cat /home/$USER/web/app/config/server.txt' /etc/nginx/conf.d/ssl_main.conf  
+        chdir: /home/$USER/web
 
-    
-  - name: Nginx configuration
-    ansible.builtin.shell:
-      cmd: sudo --preserve-env=USER sed -i '$e cat /home/$USER/web/app/config/server.txt' /etc/nginx/conf.d/ssl_main.conf  
-      chdir: /home/$USER/web
+    - name: Allowed hosts
+      ansible.builtin.shell:
+        cmd: sudo sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \[\"$(curl ifconfig.me)\"\, \"127.0.0.1\" \, \"$(sed -ne '/server_name/{s/.*server_name //; s/[; ].*//; p; q}' /etc/nginx/conf.d/ssl_main.conf)\"]/g" /home/$USER/web/app/app/settings.py
+       
 
-  - name: Allowed hosts
-    ansible.builtin.shell:
-      cmd: sudo sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \[\"$(curl ifconfig.me)\"\, \"127.0.0.1\" \, \"$(sed -ne '/server_name/{s/.*server_name //; s/[; ].*//; p; q}' /etc/nginx/conf.d/ssl_main.conf)\"]/g" /home/$USER/web/app/app/settings.py
-      
-  - name: Gunicorn log folders
-    ansible.builtin.shell:
-      cmd: sudo mkdir -pv /var/{log,run}/gunicorn/
-      chdir: /home/$USER/web
+    # - name: This command will create gunicorn config directory
+    #   ansible.builtin.shell:
+    #     cmd: echo -e '# Django WSGI application path in pattern MODULE_NAME:VARIABLE_NAME \n wsgi_app = "app.wsgi:application" \n loglevel = "debug" \n workers = 2 \n bind = "0.0.0.0:8000" \n reload = True \n accesslog = errorlog = "/var/log/gunicorn/dev.log" \n capture_output = True \n pidfile = "/var/run/gunicorn/dev.pid" \n daemon = True \n' >> /home/$USER/web/app/config/gunicorn/dev.py
 
-  - name: Gunicorn log access
-    ansible.builtin.shell:
-      cmd: sudo chown -cR $USER:$USER /var/{log,run}/gunicorn/
-      chdir: /home/$USER/web
+    - name: Gunicorn log folders
+      ansible.builtin.shell:
+        cmd: sudo mkdir -pv /var/{log,run}/gunicorn/
+        chdir: /home/$USER/web
 
-  - name: Restart Nginx
-    ansible.builtin.shell:
-      cmd: sudo systemctl restart nginx
-      chdir: /home/$USER/web
+    - name: Gunicorn log access
+      ansible.builtin.shell:
+        cmd: sudo chown -cR $USER:$USER /var/{log,run}/gunicorn/
+        chdir: /home/$USER/web
 
-  - name: Execute Gunicorn
-    ansible.builtin.shell:
-      cmd: gunicorn -c config/gunicorn/dev.py
-      chdir: /home/$USER/web/app
+    - name: Restart Nginx
+      ansible.builtin.shell:
+        cmd: sudo systemctl restart nginx
+        chdir: /home/$USER/web
+
+    - name: Execute Gunicorn
+      ansible.builtin.shell:
+        cmd: gunicorn -c config/gunicorn/dev.py
+        chdir: /home/$USER/web/app
