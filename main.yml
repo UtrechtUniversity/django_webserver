@@ -2,11 +2,11 @@
   # Main installation file
   #
   - name: Install django python package
-    ansible.builtin.pip:
+    pip:
       name: django
 
   - name: Install Gunicorn python package 
-    ansible.builtin.pip:
+    pip:
       name: gunicorn
 
 
