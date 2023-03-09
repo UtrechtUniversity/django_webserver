@@ -42,32 +42,35 @@
 
     - name: Add username to server $USER
       ansible.builtin.shell:
-        cmd: sudo sed -i "s/USER/$USER/g" $HOME/web/app/config/server.txt
+        cmd: sudo --preserve-env=USER sed -i "s/USER/$USER/g" /home/$USER/web/app/config/server.txt
   
      
-    - name: Nginx configuration
-      ansible.builtin.shell:
-        cmd: sudo --preserve-env=USER sed -i '$e cat /home/$USER/web/app/config/server.txt' /etc/nginx/conf.d/ssl_main.conf  
-        chdir: /home/$USER/web
+
 
     - name: Allowed hosts
       ansible.builtin.shell:
         cmd: sudo sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \[\"$(curl ifconfig.me)\"\, \"127.0.0.1\" \, \"$(sed -ne '/server_name/{s/.*server_name //; s/[; ].*//; p; q}' /etc/nginx/conf.d/ssl_main.conf)\"]/g" /home/$USER/web/app/app/settings.py
        
 
-    # - name: This command will create gunicorn config directory
-    #   ansible.builtin.shell:
-    #     cmd: echo -e '# Django WSGI application path in pattern MODULE_NAME:VARIABLE_NAME \n wsgi_app = "app.wsgi:application" \n loglevel = "debug" \n workers = 2 \n bind = "0.0.0.0:8000" \n reload = True \n accesslog = errorlog = "/var/log/gunicorn/dev.log" \n capture_output = True \n pidfile = "/var/run/gunicorn/dev.pid" \n daemon = True \n' >> /home/$USER/web/app/config/gunicorn/dev.py
-
-    - name: Gunicorn log folders
+    - name: This command will create gunicorn config directory
       ansible.builtin.shell:
-        cmd: sudo mkdir -pv /var/{log,run}/gunicorn/
-        chdir: /home/$USER/web
+        cmd: echo -e '# Django WSGI application path in pattern MODULE_NAME:VARIABLE_NAME \n wsgi_app = "app.wsgi:application" \n loglevel = "debug" \n workers = 2 \n bind = "0.0.0.0:8000" \n reload = True \n accesslog = errorlog = "/var/log/gunicorn/dev.log" \n capture_output = True \n pidfile = "/var/run/gunicorn/dev.pid" \n daemon = True \n' >> /home/$USER/web/app/config/gunicorn/dev.py
 
+    - name: Gunicorn log folder
+      ansible.builtin.shell:
+        cmd: sudo mkdir /var/log/gunicorn/
+  
+    - name: Gunicorn run folder
+      ansible.builtin.shell:
+        cmd: sudo mkdir /var/run/gunicorn/
+  
     - name: Gunicorn log access
       ansible.builtin.shell:
-        cmd: sudo chown -cR $USER:$USER /var/{log,run}/gunicorn/
-        chdir: /home/$USER/web
+        cmd: sudo chown -cR $USER:$USER /var/log/gunicorn/
+   
+    - name: Gunicorn run access
+      ansible.builtin.shell:
+        cmd: sudo chown -cR $USER:$USER /var/run/gunicorn/ 
 
     - name: Restart Nginx
       ansible.builtin.shell:
