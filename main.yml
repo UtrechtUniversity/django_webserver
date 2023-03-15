@@ -40,14 +40,14 @@
         src: gunicorn
         dest: "/var/log"
 
-- name: Replace a localhost entry searching for a literal string to avoid escaping
-  ansible.builtin.lineinfile:
-    path: /etc/hosts
-    search_string: 'ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot'
-    line: ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; \n include /etc/nginx/conf.d/location
-    owner: root
-    group: root
-    mode: '0644'
+    - name: Replace a localhost entry searching for a literal string to avoid escaping
+      ansible.builtin.lineinfile:
+        path: /etc/nginx/conf.d/ssl_main.conf
+        search_string: 'ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot'
+        line: ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; \n include /etc/nginx/conf.d/location
+        owner: root
+        group: root
+        mode: '0644'
 
     
 
