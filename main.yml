@@ -26,9 +26,9 @@
     - name: add location
       copy:
         src: "location"
-        dest: "/etc/nginx/conf.d/
+        dest: "/etc/nginx/conf.d/"
 
-    - name: copy gunicorn folder in var/run
+    - name: copy gunicorn folder in var/log
       become: true
       copy:
         src: gunicorn/
@@ -37,8 +37,8 @@
     - name: copy gunicorn folder in var/run
       become: true
       copy:
-        src: gunicorn
-        dest: "/var/log"
+        src: gunicorn/
+        dest: "/var/run/"
 
     - name: Replace a localhost entry searching for a literal string to avoid escaping
       ansible.builtin.lineinfile:
