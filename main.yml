@@ -61,7 +61,7 @@
     #     cmd: sudo sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \[\"$(curl ifconfig.me)\"\, \"127.0.0.1\" \, \"$(sed -ne '/server_name/{s/.*server_name //; s/[; ].*//; p; q}' /etc/nginx/conf.d/ssl_main.conf)\"]/g" /var/www/app/app/settings.py
        
     - name: Allowed hosts
-      shell: "sudo sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \[\"$(curl ifconfig.me)\"\, \"127.0.0.1\" \, \"$(sed -ne '/server_name/{s/.*server_name //; s/[; ].*//; p; q}' /etc/nginx/conf.d/ssl_main.conf)\"]/g" /var/www/app/app/settings.py"
+      shell: 'sudo sed -i \"s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = \[\"$(curl ifconfig.me)\"\, \"127.0.0.1\" \, \"$(sed -ne \"/server_name/{s/.*server_name //; s/[; ].*//; p; q}\" /etc/nginx/conf.d/ssl_main.conf)\"]/g\" /var/www/app/app/settings.py'
 
 
     # - name: This command will change the working directory to /home/$USER/
